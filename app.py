@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from database import Base, engine
+import models
 
 
 app = FastAPI(title="EventEase API", version="0.1.0")
@@ -12,6 +14,12 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+
+@app.on_event("startup")
+def on_startup() -> None:
+    # Ensure all tables are created at startup
+    Base.metadata.create_all(bind=engine)
 
 
 if __name__ == "__main__":
