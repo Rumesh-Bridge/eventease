@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from .database import Base  # Import the Base from database.py
+from database import Base
 
 # Define the User model
 class User(Base):
@@ -11,4 +11,3 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     
     # We will add roles (admin/user) later
-    
