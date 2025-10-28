@@ -1,3 +1,4 @@
+import datetime
 from pydantic import BaseModel, EmailStr
 
 
@@ -26,3 +27,29 @@ class TokenData(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+class User(UserBase):
+    id:int
+    role:str 
+
+    class Config:
+        from_attributes = True
+
+# === NEW EVENT SCHEMA ===
+class EventBase(BaseModel):
+    title:str 
+    description:str | None = None
+    location:str 
+    date_time:datetime.datetime
+    total_seats:int 
+
+class EventCreate(EventBase):
+    pass
+
+class Event(EventBase):
+    id:int
+    available_seats:int 
+    creator_id: int
+
+    class Config:
+        from_attributes =True

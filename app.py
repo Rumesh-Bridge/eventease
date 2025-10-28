@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from database import Base, engine
 import models
-from routers import users  # <-- ADD THIS LINE
+from routers import users, events
 
 app = FastAPI(title="EventEase API", version="0.1.0")
 
@@ -22,7 +22,8 @@ def on_startup() -> None:
     models.Base.metadata.create_all(bind=engine)
 
 # --- Include Routers ---
-app.include_router(users.router) # <-- This will now work
+app.include_router(users.router) 
+app.include_router(events.router)
 
 # --- Run the server ---
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from database import Base
 from sqlalchemy.orm import relationship
+import datetime
 
 # Define the User model
 class User(Base):
@@ -13,6 +14,21 @@ class User(Base):
     role = Column(String, default="user")
     
     #-- relationship to Event model---
-    # events = relationship("Event", back_populates="creator")
+    events = relationship("Event", back_populates="creator")
     
-    # We will add roles (admin/user) later
+    
+class Event(Base):
+    __tablename__ = "events"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True, nullable=False)
+    description = Column(String)
+    location = Column(String, nullable=False)
+    date_time = Column(DateTime, nullable=False)
+    total_seats = Column(Integer, nullable=False)
+    available_seats = Column(Integer, nullable=False)
+    
+    creator_id = Column(Integer, ForeignKey("users.id"))
+
+    creator = relationship("User", back_populates="events")
+
