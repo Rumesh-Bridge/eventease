@@ -24,3 +24,34 @@ def create_event(db: Session, event: schemas.EventCreate, creator_id: int):
     db.commit()
     db.refresh(db_event)
     return db_event
+
+def update_event(db: Session, event_id: int, event_update: schemas.EventCreate):
+    """Update an existing event. Returns the updated event or None if not found."""
+    db_event = get_event(db, event_id)
+    if not db_event:
+        return None
+
+    # Preserve reserved seats when changing total_seats
+    previous_total = db_event.total_seats
+    previous_available = db_event.available_seats
+
+    update_data = event_update.model_dump()
+    for field_name, value in update_data.items():
+        setattr(db_event, field_name, value)
+
+    if event_update.total_seats != previous_total:
+        reserved = max(0, previous_total - previous_available)
+        db_event.available_seats = max(0, event_update.total_seats - reserved)
+
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+def delete_event(db: Session, event_id: int) -> bool:
+    """Delete an event by ID. Returns True if deleted, False if not found."""
+    db_event = get_event(db, event_id)
+    if not db_event:
+        return False
+    db.delete(db_event)
+    db.commit()
+    return True
