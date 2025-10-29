@@ -1,6 +1,7 @@
 from pickle import TRUE
+from sqlite3 import DatabaseError
 from jose.backends import base
-from sqlalchemy import Column, Index, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Index, Integer, String, DateTime, ForeignKey, DateTime
 from database import Base
 from sqlalchemy.orm import relationship
 import datetime
@@ -47,6 +48,8 @@ class Booking(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     number_of_seats = Column(Integer, nullable=False)
+
+    booking_time =Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
 
    # Foreign key for the user who made the booking
     user_id = Column(Integer, ForeignKey("users.id"))

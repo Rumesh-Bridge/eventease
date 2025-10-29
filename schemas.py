@@ -66,7 +66,8 @@ class BookingCreate(BookingBase):
 class Booking(BookingBase):
     id:int
     user_id:int
-
+    booking_time: datetime.datetime
+    
     event:Event
 
     class Config:
