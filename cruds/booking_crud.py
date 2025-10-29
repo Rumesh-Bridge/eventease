@@ -1,11 +1,11 @@
 from pickletools import int4
-from sqlalchemy.orm import Session, session
+from sqlalchemy.orm import Session
 from fastapi import HTTPException,status
 import models
 import schemas
 from . import event_crud
 
-def create_boking(db: session, booking:schemas.BookingCreate, user_id:int):
+def create_boking(db: Session, booking:schemas.BookingCreate, user_id:int):
     """
     Creates a new booking for a user.
     """
@@ -45,3 +45,7 @@ def get_user_bookings(db: Session, user_id: int):
     """ Gets all booking for a specific user. """
 
     return db.query(models.Booking).filter(models.Booking.user_id == user_id).all()
+
+def get_all_booking(db: Session, skip: int = 0, limit: int = 100):
+    """ Gets all booking in the system. (Admin only) """
+    return db.query(models.Booking).offset(skip).limit(limit).all()

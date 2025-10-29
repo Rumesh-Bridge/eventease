@@ -4,7 +4,7 @@ from starlette.routing import Router
 import schemas
 from cruds import booking_crud
 from database import get_db
-from auth import get_current_user
+from auth import get_current_admin_user, get_current_user
 import models
 
 router = APIRouter(
@@ -38,3 +38,16 @@ def read_user_bookings(db: Session = Depends(get_db), current_user: models.User 
     """
 
     return booking_crud.get_user_bookings(db=db, user_id=current_user.id)
+
+# === New Get ALL BOOKING (ADMIN ONMLY)====
+@router.get("/all", response_model=list[schemas.Booking])
+def read_all_bookings(
+    skip: int =0, limit:int =100 , 
+    db: Session = Depends(get_db), 
+    admin_user:models.User = Depends(get_current_admin_user)):
+    """ Get a list of all booking in the system
+    This is accessible only to the admin
+     """
+    
+    booking = booking_crud.get_all_booking(db, skip=skip, limit=limit)
+    return booking
