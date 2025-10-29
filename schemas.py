@@ -53,3 +53,21 @@ class Event(EventBase):
 
     class Config:
         from_attributes =True
+
+# === NEW BOOKING SCHEMA ====
+
+class BookingBase(BaseModel):
+    event_id: int
+    number_of_seats:int
+
+class BookingCreate(BookingBase):
+    pass
+
+class Booking(BookingBase):
+    id:int
+    user_id:int
+
+    event:Event
+
+    class Config:
+        free_attribute = True

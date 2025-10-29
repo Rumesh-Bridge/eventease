@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from database import Base, engine
 import models
-from routers import users, events
+from routers import users, events, bookins
 
 app = FastAPI(title="EventEase API", version="0.1.0")
 
@@ -24,6 +24,7 @@ def on_startup() -> None:
 # --- Include Routers ---
 app.include_router(users.router) 
 app.include_router(events.router)
+app.include_router(bookins.router)
 
 # --- Run the server ---
 if __name__ == "__main__":

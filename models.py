@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from pickle import TRUE
+from jose.backends import base
+from sqlalchemy import Column, Index, Integer, String, DateTime, ForeignKey
 from database import Base
 from sqlalchemy.orm import relationship
 import datetime
@@ -15,6 +17,9 @@ class User(Base):
     
     #-- relationship to Event model---
     events = relationship("Event", back_populates="creator")
+
+    # -- relationship to booking model ---
+    bookings = relationship("Booking", back_populates="user")
     
     
 class Event(Base):
@@ -30,5 +35,24 @@ class Event(Base):
     
     creator_id = Column(Integer, ForeignKey("users.id"))
 
+    #--- relationship to the user---
     creator = relationship("User", back_populates="events")
 
+    #--- realtionship to the booking class--
+    bookings = relationship("Booking", back_populates="event")
+
+
+class Booking(Base):
+    __tablename__ = "bookings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    number_of_seats = Column(Integer, nullable=False)
+
+   # Foreign key for the user who made the booking
+    user_id = Column(Integer, ForeignKey("users.id"))
+    # Foreign key for the event being booked
+    event_id = Column(Integer, ForeignKey("events.id"))
+
+    #Relationships
+    user = relationship("User", back_populates="bookings")
+    event = relationship("Event", back_populates="bookings")
