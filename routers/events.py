@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+import ai_utils
 import schemas
 from cruds import event_crud
 from database import get_db
@@ -84,3 +85,19 @@ def delete_event(
         "status_code": status.HTTP_200_OK,
         "message": "Event deleted successfully"
     })
+
+@router.post("/generate_description/", response_model=schemas.AIDescriptionResponse)
+def get_ai_description(
+    prompt:schemas.AIDescriptionPrompt,
+    admin_user: models.User = Depends(get_current_admin_user)
+):
+    """
+    Generates a proffessional event description from a short prompt.
+    This is assessible only to admin usres.
+    """
+    description = ai_utils.generate_event_description(prompt.prompt)
+
+    if (description.startswith("Error: ")):
+        raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=description)
+    
+    return {"description": description}

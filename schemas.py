@@ -71,3 +71,11 @@ class Booking(BookingBase):
 
     class Config:
         from_attributes = True
+
+# === AI Schemas ===
+
+class AIDescriptionPrompt(BaseModel):
+    prompt: str
+
+class AIDescriptionResponse(BaseModel):
+    description: str

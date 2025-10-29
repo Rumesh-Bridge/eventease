@@ -1,5 +1,9 @@
+from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
+import ai_utils
+from auth import get_current_admin_user
 import models
+from routers.users import router
 import schemas
 
 def get_event(db: Session, event_id: int):
@@ -55,3 +59,4 @@ def delete_event(db: Session, event_id: int) -> bool:
     db.delete(db_event)
     db.commit()
     return True
+
