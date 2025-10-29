@@ -10,7 +10,7 @@ from auth import get_current_admin_user, get_current_user
 import models
 
 router = APIRouter(
-    prefix="/bookings",
+    prefix="/api/bookings",
     tags=["Bookings"]
 )
 

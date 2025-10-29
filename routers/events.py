@@ -9,7 +9,7 @@ from auth import get_current_admin_user
 import models
 
 router = APIRouter(
-    prefix="/events",
+    prefix="/api/events",
     tags=["Events"]  # This groups them in the /docs
 )
 

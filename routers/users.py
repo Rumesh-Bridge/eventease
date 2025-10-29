@@ -10,7 +10,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 # 1. Create a router
 router = APIRouter(
-    prefix="/users",
+    prefix="/api/users",
     tags=["users"]
 )
 
