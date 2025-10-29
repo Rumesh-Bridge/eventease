@@ -1,4 +1,6 @@
+from turtle import mode
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from starlette.routing import Router
 import schemas
@@ -39,7 +41,7 @@ def read_user_bookings(db: Session = Depends(get_db), current_user: models.User 
 
     return booking_crud.get_user_bookings(db=db, user_id=current_user.id)
 
-# === New Get ALL BOOKING (ADMIN ONMLY)====
+# === Get ALL BOOKING (ADMIN ONMLY)====
 @router.get("/all", response_model=list[schemas.Booking])
 def read_all_bookings(
     skip: int =0, limit:int =100 , 
@@ -51,3 +53,36 @@ def read_all_bookings(
     
     booking = booking_crud.get_all_booking(db, skip=skip, limit=limit)
     return booking
+
+# === Cancel BOOKING (user) ===
+@router.delete("/{booking_id}", response_model=schemas.Booking)
+def delete_booking (
+    booking_id:int,
+    db: Session =  Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """ Cancel a booking. A user can only cancel their own bookings """
+
+    try:
+        cancelled_booking = booking_crud.cancel_booking(
+            db= db, booking_id= booking_id, user_id=current_user.id
+        )
+
+        return JSONResponse(status_code=status.HTTP_200_OK, content={
+            "success":True,
+            "status_code":status.HTTP_200_OK,
+            "message": "Booking cancelled successfully",
+            "booking":cancelled_booking.model_dump(mode='json')
+        })
+    except HTTPException as e:
+        return JSONResponse(status_code=e.status_code, content={
+            "success": False,
+            "status_code": e.status_code,
+            "message": e.detail
+        })
+    except Exception as e:
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={
+            "success": False,
+            "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "message": f"An unexpected error occurred: {str(e)}"
+        })

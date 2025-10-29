@@ -58,17 +58,16 @@ class Event(EventBase):
 
 class BookingBase(BaseModel):
     event_id: int
-    number_of_seats:int
+    number_of_seats: int
 
 class BookingCreate(BookingBase):
     pass
 
 class Booking(BookingBase):
-    id:int
-    user_id:int
+    id: int
+    user_id: int
     booking_time: datetime.datetime
-    
-    event:Event
+    event: Event  
 
     class Config:
-        free_attribute = True
+        from_attributes = True

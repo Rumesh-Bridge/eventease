@@ -1,7 +1,8 @@
 from pickletools import int4
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException,status
 import models
+from routers import bookins
 import schemas
 from . import event_crud
 
@@ -49,3 +50,44 @@ def get_user_bookings(db: Session, user_id: int):
 def get_all_booking(db: Session, skip: int = 0, limit: int = 100):
     """ Gets all booking in the system. (Admin only) """
     return db.query(models.Booking).offset(skip).limit(limit).all()
+
+# --- Get booking by ID ----
+def get_booking(db: Session, booking_id:int):
+    """
+    Gets a single booking ID.
+    """
+    return db.query(models.Booking).filter(models.Booking.id == booking_id).first()
+
+def cancel_booking(db: Session, booking_id: int, user_id: int):
+    """
+    Cancels a booking for a user.
+    """
+
+    # 2. Modify the query to eagerly load the 'event'
+    db_booking = db.query(models.Booking).options(
+        joinedload(models.Booking.event)
+    ).filter(
+        models.Booking.id == booking_id,
+        models.Booking.user_id == user_id
+    ).first()
+
+    # 3. Check if it exists
+    if not db_booking:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+
+    # 4. Create the snapshot *before* deleting
+    booking_snapshot = schemas.Booking.model_validate(db_booking)
+
+    # 5. Get the event (it's already loaded, no new query needed)
+    db_event = db_booking.event 
+
+    if db_event:
+        db_event.available_seats += db_booking.number_of_seats
+        db.add(db_event)
+
+    # 6. Delete the booking
+    db.delete(db_booking)
+    db.commit()
+
+    # 7. Return the Pydantic snapshot
+    return booking_snapshot
