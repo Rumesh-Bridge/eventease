@@ -1,0 +1,79 @@
+{% extends "base_minimal.html" %}
+
+{% block title %}EventEase - Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm p-4">
+            <h2 class="text-center mb-4">Sign In</h2>
+            
+            <form id="login-form">
+                
+                <div class="form-floating mb-3">
+                    <input type="email" id="email" class="form-control" placeholder="name@example.com" required />
+                    <label class="form-label" for="email">Email address</label>
+                </div>
+
+                <div class="form-floating mb-4">
+                    <input type="password" id="password" class="form-control" placeholder="Password" required />
+                    <label class="form-label" for="password">Password</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 mb-4">Sign in</button>
+
+                <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+
+                <div class="text-center">
+                    <p>Not a member? <a href="/register/">Register</a></p>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("login-form").addEventListener("submit", async function(event) {
+        // Prevent the form's default submission
+        event.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const errorMessage = document.getElementById("error-message");
+
+        try {
+            const response = await fetch("/api/users/login/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Show error message from the API (e.g., "Incorrect email or password")
+                errorMessage.textContent = data.detail || "An unknown error occurred.";
+                errorMessage.style.display = "block";
+            } else {
+                // Success! Store the token (e.g., in localStorage)
+                localStorage.setItem("access_token", data.access_token);
+                console.log("login success")
+                
+                // Redirect to the 'My Bookings' page
+                window.location.href = "/";
+            }
+
+        } catch (error) {
+            errorMessage.textContent = "Could not connect to the server.";
+            errorMessage.style.display = "block";
+        }
+    });
+</script>
+
+{% endblock %}

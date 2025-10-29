@@ -1,9 +1,12 @@
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from cruds import event_crud
 from database import Base, engine
 import models
 from routers import users, events, bookins
 from fastapi.staticfiles import StaticFiles
+from database import Base, engine, get_db
 
 app = FastAPI(title="EventEase API", version="0.1.0")
 
@@ -15,11 +18,31 @@ templates = Jinja2Templates(directory="templates")
 
 # --- Create the Home Page Route ---
 @app.get("/", include_in_schema=False) 
-def read_home(request: Request):
+def read_home(request: Request, db: Session = Depends(get_db)):
     """
     Serves the home.html page.
     """
-    return templates.TemplateResponse("home.html", {"request": request})
+    events = event_crud.get_events(db, skip=0, limit=6)
+    # Pass the events to the template
+    return templates.TemplateResponse(
+        "home.html", 
+        {"request": request, "events": events} # Add events to context
+    )
+
+
+@app.get("/users/login/", include_in_schema=False)
+def get_login_page(request: Request):
+    """
+    Serves the login.html page.
+    """
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/users/register/", include_in_schema=False)
+def get_register_page(request: Request):
+    """
+    Serves the register.html page.
+    """
+    return templates.TemplateResponse("register.html", {"request": request})
 
 # ---  API root ---
 @app.get("/api/", include_in_schema=False)
