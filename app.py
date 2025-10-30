@@ -78,11 +78,24 @@ def get_event_detail_page(request: Request, event_id: int, db: Session = Depends
 
     return templates.TemplateResponse("event_detail.html", {"request": request, "event": event})
 
-@app.get("booking/me",include_in_schema=False)
-def get_my_book_page(request:Request):
+@app.get("/bookings/me",include_in_schema=False)
+def get_my_bookings_page(request:Request):
     """ Server the my_bookings_page """
 
-    return templates.TemplateResponse("my_booking")
+    return templates.TemplateResponse("my_booking.html",{"request":request})
+
+# === ADMIN SCREEN ====
+@app.get("/admin/login", include_in_schema=False)
+def get_admin_login_page(request: Request):
+    """ Server the admin login page """
+
+    return templates.TemplateResponse("admin/admin_login.html",{"request":request})
+
+@app.get("/admin/dashboard", include_in_schema=False)
+def get_admin_login_page(request: Request):
+    """ Server the admin dashbaord page """
+
+    return templates.TemplateResponse("admin/admin_dashboard.html",{"request":request})
 
 # --- Run the server ---
 if __name__ == "__main__":

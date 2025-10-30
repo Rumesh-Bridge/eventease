@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings{% endblock %}
+
+{% block content %}
+    <h1 class="display-5 mb-4">My Bookings</h1>
+    
+    <div id="loading-spinner" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    
+    <div id="bookings-list" class="row" style="display: none;">
+        </div>
+    
+    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+    <div id="no-bookings-message" class="alert alert-info" style="display: none;">
+        You have no upcoming bookings. <a href="/" class="alert-link">Why not book one?</a>
+    </div>
+
+<script>
+    // This function runs as soon as the HTML page is loaded
+    document.addEventListener("DOMContentLoaded", async function() {
+        const token = localStorage.getItem("access_token");
+        const listEl = document.getElementById("bookings-list");
+        const loadingEl = document.getElementById("loading-spinner");
+        const errorEl = document.getElementById("error-message");
+        const noBookingsEl = document.getElementById("no-bookings-message");
+
+        // 1. Check if user is logged in
+        if (!token) {
+            // If user is not logged in, redirect them to the login page
+            window.location.href = "/login/";
+            return;
+        }
+
+        // 2. Fetch bookings from the API
+        try {
+            const response = await fetch("/api/bookings/me/", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            const bookings = await response.json();
+
+            // 3. Handle the response
+            if (!response.ok) {
+                // Show API error (e.g., token expired)
+                errorEl.textContent = bookings.detail || "Could not fetch bookings.";
+                errorEl.style.display = "block";
+            } else if (bookings.length === 0) {
+                // Show "No bookings" message
+                noBookingsEl.style.display = "block";
+            } else {
+                // 4. Build and display the booking cards
+                listEl.innerHTML = ""; // Clear any old content
+                
+                bookings.forEach(booking => {
+                    const event = booking.event;
+                    // Format the date/time to be more readable
+                    const eventTime = new Date(event.date_time).toLocaleString('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+
+                    // Create the HTML for one booking card
+                    const cardHtml = `
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">${event.title}</h5>
+                                    <p class="card-text text-muted">${event.location}</p>
+                                    <p class="card-text">
+                                        <strong>Seats Booked:</strong> ${booking.number_of_seats}
+                                    </p>
+                                    <p class="card-text">
+                                        <strong>Date:</strong> ${eventTime}
+                                    </p>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="cancelBooking(${booking.id})">
+                                        Cancel Booking
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    listEl.innerHTML += cardHtml;
+                });
+                
+                listEl.style.display = "flex"; // Show the list
+            }
+
+        } catch (error) {
+            // Handle network errors
+            errorEl.textContent = "Could not connect to the server.";
+            errorEl.style.display = "block";
+        } finally {
+            loadingEl.style.display = "none"; // Hide the spinner
+        }
+    });
+
+    // This function is called by the "Cancel Booking" button
+    async function cancelBooking(bookingId) {
+        const token = localStorage.getItem("access_token");
+        if (!confirm("Are you sure you want to cancel this booking?")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/bookings/${bookingId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("Booking cancelled successfully!");
+                window.location.reload(); 
+            } else {
+                alert("Failed to cancel booking: " + data.message);
+            }
+        } catch (error) {
+            alert("An error occurred. Could not cancel booking.");
+        }
+    }
+</script>
+{% endblock %}
