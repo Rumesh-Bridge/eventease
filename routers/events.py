@@ -1,5 +1,8 @@
+from turtle import ht
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
+from openai import responses
+from pydantic import schema
 from sqlalchemy.orm import Session
 import ai_utils
 import schemas
@@ -101,3 +104,35 @@ def get_ai_description(
         raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=description)
     
     return {"description": description}
+
+# === events chatbot ====
+# In routers/events.py
+
+# === AI CHATBOT (Public) ===
+# 1. FIX: Use the correct response_model
+@router.post("/chat", response_model=schemas.AIChatResponse)
+def chat_with_ai(
+    chat_request: schemas.AIChatRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Public endpoint for the AI chatbot to answer event-related questions.
+    """
+    # 1. GET ALL EVENT to use as context
+    events = event_crud.get_events(db)
+    
+    # 2. Convert to list of dictionaries
+    # 2. FIX: Typo was 'for a in events'
+    events_data = [schemas.Event.model_validate(e).model_dump() for e in events]
+    
+    # 3. Get the AI's responce 
+    responses = ai_utils.get_event_chat_response(
+        query=chat_request.query,
+        events=events_data
+    )
+
+    if responses.startswith("Error:"):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=responses)
+
+    # 3. FIX: Return the correct JSON object
+    return {"response": responses}

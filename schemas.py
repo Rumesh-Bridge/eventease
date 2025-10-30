@@ -83,3 +83,9 @@ class AIDescriptionResponse(BaseModel):
 
 class AIBookingSummary(BaseModel):
     summary: str
+
+class AIChatRequest(BaseModel):
+    query: str
+
+class AIChatResponse(BaseModel):
+    response: str
