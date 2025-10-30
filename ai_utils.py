@@ -84,7 +84,9 @@ def generate_booking_summary(bookings: list) -> str:
                         "You will receive a JSON list of their bookings. "
                         "Summarize them in a friendly, concise paragraph. "
                         "Clearly distinguish between 'upcoming' and 'past' events. "
-                        "Today's date is " + today.strftime('%B %d, %Y')
+                        "Start your response using a phrase like 'Here is your Booking Summary'."
+                        "Today's date is " + today.strftime('%B %d, %Y') 
+                        
                     )
                 },
                 {
