@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-4">
+                <h1 class="display-5">{{ event.title }}</h1>
+                <hr>
+                <p class="fs-5">{{ event.description }}</p>
+                
+                <h4 class="mt-4">Details</h4>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <strong>Date & Time:</strong> {{ event.date_time.strftime('%B %d, %Y at %I:%M %p') }}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Location:</strong> {{ event.location }}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Available Seats:</strong> {{ event.available_seats }} / {{ event.total_seats }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-center">Book Your Spot!</h5>
+                <hr>
+                <form id="booking-form">
+                    <div class="mb-3">
+                        <label for="number_of_seats" class="form-label">Number of Seats</label>
+                        <input type="number" class="form-control" id="number_of_seats" value="1" min="1" max="{{ event.available_seats }}" required>
+                    </div>
+                    
+                    <input type="hidden" id="event_id" value="{{ event.id }}">
+                    
+                    <button type="submit" class="btn btn-primary w-100">Book Now</button>
+                </form>
+                
+                <div id="booking-message" class="alert mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("booking-form").addEventListener("submit", async function(event) {
+        event.preventDefault(); // Stop the form from submitting normally
+        
+        const event_id = document.getElementById("event_id").value;
+        const number_of_seats = parseInt(document.getElementById("number_of_seats").value);
+        const token = localStorage.getItem("access_token"); // Get the token from login
+
+              
+        const messageEl = document.getElementById("booking-message");
+
+        console.log(token)
+
+        // If the user isn't logged in, send them to the login page
+        if (!token) {
+            window.location.href = "/login/"; 
+            return;
+        }
+
+        // --- Send data to the Booking API ---
+        try {
+            const response = await fetch("/api/bookings/", { 
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token 
+                },
+                body: JSON.stringify({
+                    event_id: parseInt(event_id),
+                    number_of_seats: number_of_seats
+                })
+            });
+
+            const data = await response.json();
+
+            // --- Handle the API response ---
+            if (!response.ok) {
+                // Show error message (e.g., "Not enough seats")
+                messageEl.textContent = data.detail || "Booking failed.";
+                messageEl.className = "alert alert-danger mt-3"; // Red alert
+                messageEl.style.display = "block";
+            } else {
+                // Show success message
+                messageEl.textContent = "Booking successful! View in 'My Bookings'.";
+                messageEl.className = "alert alert-success mt-3"; // Green alert
+                messageEl.style.display = "block";
+                
+                // Refresh page after 2 seconds to show updated available seats
+                setTimeout(() => window.location.reload(), 2000);
+            }
+
+        } catch (error) {
+            // Handle network errors
+            messageEl.textContent = "Could not connect to the server.";
+            messageEl.className = "alert alert-danger mt-3";
+            messageEl.style.display = "block";
+        }
+    });
+</script>
+{% endblock %}

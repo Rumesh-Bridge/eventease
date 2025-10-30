@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from cruds import event_crud
@@ -67,7 +67,23 @@ def get_register_page(request: Request):
     Serves the register.html page.
     """
     return templates.TemplateResponse("register.html", {"request": request})
-    
+
+@app.get("/events/{event_id}", include_in_schema=False)
+def get_event_detail_page(request: Request, event_id: int, db: Session = Depends(get_db)):
+    """Serves the event_detail.html page for a single event."""
+    event = event_crud.get_event(db, event_id=event_id)
+    if not event:
+      
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+
+    return templates.TemplateResponse("event_detail.html", {"request": request, "event": event})
+
+@app.get("booking/me",include_in_schema=False)
+def get_my_book_page(request:Request):
+    """ Server the my_bookings_page """
+
+    return templates.TemplateResponse("my_booking")
+
 # --- Run the server ---
 if __name__ == "__main__":
     # For local development: python app.py
