@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6 col-lg-5">
-        <div class="card shadow-sm p-4">
+        <div class="card auth-card p-4">
             <h2 class="text-center mb-4">Create Account</h2>
             
             <form id="register-form">
@@ -20,9 +20,20 @@
                     <label class="form-label" for="email">Email address</label>
                 </div>
 
-                <div class="form-floating mb-4">
+                <label class="form-label" for="password">Password</label>
+                <div class="input-group mb-3">
                     <input type="password" id="password" class="form-control" placeholder="Password" required />
-                    <label class="form-label" for="password">Password</label>
+                    <button class="btn btn-outline-secondary" type="button" id="toggle-password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+
+                <label class="form-label" for="confirm-password">Confirm Password</label>
+                <div class="input-group mb-4">
+                    <input type="password" id="confirm-password" class="form-control" placeholder="Confirm Password" required />
+                    <button class="btn btn-outline-secondary" type="button" id="toggle-confirm-password">
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-lg w-100 mb-4">Register</button>
@@ -30,23 +41,52 @@
                 <div id="error-message" class="alert alert-danger" style="display: none;"></div>
 
                 <div class="text-center">
-                    <p>Already have an account? <a href="/users/login/">Sign in</a></p>
+                    <p>Already have an account? <a href="/login/">Sign in</a></p>
                 </div>
-
             </form>
         </div>
     </div>
 </div>
 
 <script>
+    // --- Password View/Hide Toggle Logic ---
+    function setupPasswordToggle(inputId, toggleButtonId) {
+        const toggleButton = document.getElementById(toggleButtonId);
+        const passwordInput = document.getElementById(inputId);
+        const icon = toggleButton.querySelector("i");
+
+        toggleButton.addEventListener("click", function () {
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                icon.classList.remove("bi-eye");
+                icon.classList.add("bi-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                icon.classList.remove("bi-eye-slash");
+                icon.classList.add("bi-eye");
+            }
+        });
+    }
+
+    setupPasswordToggle("password", "toggle-password");
+    setupPasswordToggle("confirm-password", "toggle-confirm-password");
+
+    // --- Form Submission Logic ---
     document.getElementById("register-form").addEventListener("submit", async function(event) {
-        // Prevent the form's default submission
         event.preventDefault();
 
         const name = document.getElementById("name").value;
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirm-password").value;
         const errorMessage = document.getElementById("error-message");
+
+        // --- Client-side validation ---
+        if (password !== confirmPassword) {
+            errorMessage.textContent = "Passwords do not match.";
+            errorMessage.style.display = "block";
+            return; // Stop the form submission
+        }
 
         try {
             const response = await fetch("/api/users/register/", {
@@ -64,11 +104,9 @@
             const data = await response.json();
 
             if (!response.ok) {
-                // Show error message from the API (e.g., "Email already registered")
                 errorMessage.textContent = data.detail || "An unknown error occurred.";
                 errorMessage.style.display = "block";
             } else {
-                // Success! Redirect to the login page
                 window.location.href = "/users/login/";
             }
 
