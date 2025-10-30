@@ -51,24 +51,19 @@
 
 <script>
     document.getElementById("booking-form").addEventListener("submit", async function(event) {
-        event.preventDefault(); // Stop the form from submitting normally
+        event.preventDefault(); 
         
         const event_id = document.getElementById("event_id").value;
         const number_of_seats = parseInt(document.getElementById("number_of_seats").value);
-        const token = localStorage.getItem("access_token"); // Get the token from login
-
-              
+        const token = localStorage.getItem("access_token");
         const messageEl = document.getElementById("booking-message");
+        const formEl = document.getElementById("booking-form");
 
-        console.log(token)
-
-        // If the user isn't logged in, send them to the login page
         if (!token) {
             window.location.href = "/login/"; 
             return;
         }
 
-        // --- Send data to the Booking API ---
         try {
             const response = await fetch("/api/bookings/", { 
                 method: "POST",
@@ -84,28 +79,77 @@
 
             const data = await response.json();
 
-            // --- Handle the API response ---
             if (!response.ok) {
-                // Show error message (e.g., "Not enough seats")
                 messageEl.textContent = data.detail || "Booking failed.";
-                messageEl.className = "alert alert-danger mt-3"; // Red alert
+                messageEl.className = "alert alert-danger mt-3";
                 messageEl.style.display = "block";
             } else {
-                // Show success message
-                messageEl.textContent = "Booking successful! View in 'My Bookings'.";
-                messageEl.className = "alert alert-success mt-3"; // Green alert
+                messageEl.textContent = "Booking successful!";
+                messageEl.className = "alert alert-success mt-3";
                 messageEl.style.display = "block";
+                formEl.style.display = "none";
                 
-                // Refresh page after 2 seconds to show updated available seats
-                setTimeout(() => window.location.reload(), 2000);
+                const downloadButton = document.createElement("button");
+                downloadButton.type = "button";
+                downloadButton.className = "btn btn-success w-100";
+                downloadButton.textContent = "Download Confirmation (PDF)";
+                downloadButton.onclick = function() {
+                    downloadPDF(data.id); 
+                };
+                
+                messageEl.parentNode.appendChild(downloadButton);
+                setTimeout(() => window.location.reload(), 3000);
             }
-
         } catch (error) {
-            // Handle network errors
             messageEl.textContent = "Could not connect to the server.";
             messageEl.className = "alert alert-danger mt-3";
             messageEl.style.display = "block";
         }
     });
+
+    // --- FUNCTION TO HANDLE PDF DOWNLOAD ---
+    async function downloadPDF(bookingId) {
+        const token = localStorage.getItem("access_token");
+        
+        try {
+            const response = await fetch(`/api/bookings/${bookingId}/download/`, {
+                method: "GET",
+                headers: { "Authorization": "Bearer " + token }
+            });
+
+            if (!response.ok) {
+                throw new Error("Could not download PDF. Please try again.");
+            }
+
+            const blob = await response.blob();
+            const contentDisposition = response.headers.get("content-disposition");
+            let filename = "booking-confirmation.pdf";
+            
+            // --- THIS IS THE FIX ---
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                // Check if filenameMatch is not null AND has a result
+                if (filenameMatch && filenameMatch.length > 1) {
+                    filename = filenameMatch[1];
+                }
+            }
+            // --- END OF FIX ---
+            
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = filename;
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            
+        } catch (error) {
+            alert(error.message);
+        }
+    }
 </script>
 {% endblock %}

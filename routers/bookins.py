@@ -10,6 +10,8 @@ from cruds import booking_crud
 from database import get_db
 from auth import get_current_admin_user, get_current_user
 import models
+from fastapi.responses import StreamingResponse
+import pdf_utils
 
 router = APIRouter(
     prefix="/api/bookings",
@@ -107,3 +109,34 @@ def get_ai_booking_summary(db: Session = Depends(get_db), current_user: models.U
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=summary)
     
     return {"summary": summary}
+
+# == DOWNLOAD BOOKING PDF (User) ==
+@router.get("/{booking_id}/download/", response_class=StreamingResponse)
+def download_booking_pdf(
+    booking_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Generates and returns a PDF confirmation for a user's booking.
+    """
+    # 3. Get the booking and verify ownership
+    booking = booking_crud.get_user_booking_by_id(
+        db, booking_id=booking_id, user_id=current_user.id
+    )
+    
+    if not booking:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+
+    # 4. Generate the PDF
+    pdf_buffer = pdf_utils.create_booking_pdf(booking)
+    
+    # 5. Create a filename
+    filename = f"EventEase_Booking_{booking.id}.pdf"
+    
+    # 6. Stream the PDF back to the user
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

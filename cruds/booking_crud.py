@@ -94,3 +94,17 @@ def cancel_booking(db: Session, booking_id: int, user_id: int):
 
     # 7. Return the Pydantic snapshot
     return booking_snapshot
+
+# get single booking
+def get_user_booking_by_id(db: Session, booking_id: int, user_id: int):
+    """
+    Gets a single booking by its ID, ensuring it belongs to the specified user.
+    Eagerly loads event and user details.
+    """
+    return db.query(models.Booking).options(
+        joinedload(models.Booking.event),
+        joinedload(models.Booking.user)
+    ).filter(
+        models.Booking.id == booking_id,
+        models.Booking.user_id == user_id
+    ).first()

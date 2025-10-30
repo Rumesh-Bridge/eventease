@@ -10,3 +10,4 @@ python-multipart
 bcrypt==3.2.0
 openai
 python-dotenv
+reportlab
