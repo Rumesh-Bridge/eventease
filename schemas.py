@@ -80,3 +80,6 @@ class AIDescriptionPrompt(BaseModel):
 
 class AIDescriptionResponse(BaseModel):
     description: str
+
+class AIBookingSummary(BaseModel):
+    summary: str

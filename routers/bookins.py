@@ -1,8 +1,10 @@
 from turtle import mode
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
+from jinja2 import runtime
 from sqlalchemy.orm import Session
 from starlette.routing import Router
+import ai_utils
 import schemas
 from cruds import booking_crud
 from database import get_db
@@ -86,3 +88,22 @@ def delete_booking (
             "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
             "message": f"An unexpected error occurred: {str(e)}"
         })
+
+# AI BOOKING SUMMERY
+@router.get("/me/summary" , response_model=schemas.AIBookingSummary)
+def get_ai_booking_summary(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    """ Generate a natural language summery of the user's bookings """
+    
+    #fetch user's booking
+    bookings = booking_crud.get_user_bookings(db, user_id=current_user.id)
+
+    #Convert SQLAlchemy objects to Pydantic models (dictionaries)
+    bookings_data = [schemas.Booking.model_validate(b).model_dump() for b in bookings]
+
+    # Generate the summary
+    summary = ai_utils.generate_booking_summary(bookings_data)
+
+    if summary.startswith("Error:"):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=summary)
+    
+    return {"summary": summary}
