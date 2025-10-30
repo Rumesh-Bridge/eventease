@@ -104,6 +104,17 @@ def get_create_event_page(request: Request):
     """
     return templates.TemplateResponse("admin/create_event.html", {"request": request})   
 
+@app.get("/events/", include_in_schema=False)
+def get_all_events_page(request: Request, db: Session = Depends(get_db)):
+    """
+    Serves the 'All Events' page, showing all events.
+    """
+    events_list = event_crud.get_events(db) 
+    return templates.TemplateResponse(
+        "events.html", 
+        {"request": request, "events": events_list}
+    )
+
 # --- Run the server ---
 if __name__ == "__main__":
     # For local development: python app.py
