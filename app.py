@@ -39,7 +39,7 @@ app.include_router(users.router)
 app.include_router(events.router)
 app.include_router(bookins.router)
 
-
+#================================ View Templates ===================================
 # --- Create the Home Page Route ---
 @app.get("/", include_in_schema=False) 
 def read_home(request: Request, db: Session = Depends(get_db)):

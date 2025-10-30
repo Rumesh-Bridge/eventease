@@ -13,7 +13,7 @@ import models
 
 router = APIRouter(
     prefix="/api/events",
-    tags=["Events"]  # This groups them in the /docs
+    tags=["Events"] 
 )
 
 @router.post("/", response_model=schemas.Event)
@@ -89,6 +89,7 @@ def delete_event(
         "message": "Event deleted successfully"
     })
 
+# ==  Enhancing the descption using AI (Admin)
 @router.post("/generate_description/", response_model=schemas.AIDescriptionResponse)
 def get_ai_description(
     prompt:schemas.AIDescriptionPrompt,
@@ -105,11 +106,8 @@ def get_ai_description(
     
     return {"description": description}
 
-# === events chatbot ====
-# In routers/events.py
 
 # === AI CHATBOT (Public) ===
-# 1. FIX: Use the correct response_model
 @router.post("/chat", response_model=schemas.AIChatResponse)
 def chat_with_ai(
     chat_request: schemas.AIChatRequest,

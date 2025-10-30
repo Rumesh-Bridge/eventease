@@ -8,13 +8,12 @@ from database import get_db
 from security import verify_password, create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 
-# 1. Create a router
 router = APIRouter(
     prefix="/api/users",
     tags=["users"]
 )
 
-#2. Chnage decorator to @router.post
+
 @router.post("/register/", response_model=schemas.User)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """Register a new user"""

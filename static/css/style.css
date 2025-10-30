@@ -28,19 +28,19 @@ body {
     background-color: rgba(0, 0, 0, 0.55);
     border-radius: 0.5rem;
     padding: 2.5rem;
-    display: inline-block; /* Keeps the overlay tight to the content */
+    display: inline-block; 
 }
 
 /* --- Card Styles --- */
 .event-card {
-    border: none; /* Remove default border */
-    transition: all 0.3s ease; /* Add a smooth transition */
-    height: 100%; /* Make all cards the same height */
+    border: none; 
+    transition: all 0.3s ease; 
+    height: 100%; 
 }
 
 .event-card:hover {
-    transform: translateY(-5px); /* Lift card on hover */
-    box-shadow: 0 8px 15px rgba(0,0,0,0.1); /* Add a more pronounced shadow */
+    transform: translateY(-5px); 
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1); 
 }
 
 /* --- Login/Register Forms --- */
@@ -58,7 +58,7 @@ body {
     right: 20px;
     width: 60px;
     height: 60px;
-    background-color: var(--bs-primary); /* Use Bootstrap's primary color */
+    background-color: var(--bs-primary); 
     color: white;
     border-radius: 50%;
     border: none;
@@ -92,13 +92,13 @@ body {
 }
 
 .ai-message {
-    background-color: #e9ecef; /* Light gray for AI */
+    background-color: #e9ecef; 
     color: #212529;
     align-self: flex-start;
 }
 
 .user-message {
-    background-color: #0d6efd; /* Bootstrap blue for user */
+    background-color: #0d6efd; 
     color: white;
     align-self: flex-end;
 }
