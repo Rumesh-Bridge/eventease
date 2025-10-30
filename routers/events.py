@@ -122,7 +122,6 @@ def chat_with_ai(
     events = event_crud.get_events(db)
     
     # 2. Convert to list of dictionaries
-    # 2. FIX: Typo was 'for a in events'
     events_data = [schemas.Event.model_validate(e).model_dump() for e in events]
     
     # 3. Get the AI's responce 
@@ -131,8 +130,8 @@ def chat_with_ai(
         events=events_data
     )
 
+    # 4. if responce ERROR handle it
     if responses.startswith("Error:"):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=responses)
 
-    # 3. FIX: Return the correct JSON object
     return {"response": responses}
