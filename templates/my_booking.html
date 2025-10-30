@@ -9,13 +9,28 @@
             <i class="bi bi-robot"></i> Summarize My Bookings
         </button>
     </div>
+
+    <div class="mb-4 text-center">
+        <div class="btn-group" role="group" id="booking-filter-group">
+            <button type="button" class="btn btn-primary active" data-filter="all">All</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="upcoming">Upcoming</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="past">Past</button>
+        </div>
+    </div>
     
     <div id="loading-spinner" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
+    </div>
     
-    <div id="bookings-list" class="row" style="display: none;">
-        </div>
+    <div id="bookings-list" class="row" style="display: none;"></div>
     
+    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+    <div id="no-bookings-message" class="alert alert-info" style="display: none;">
+        You have no bookings. <a href="/" class="alert-link">Why not book one?</a>
+    </div>
+
     <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -37,24 +52,92 @@
         </div>
     </div>
     <script>
+    // Global variable to store all bookings
+    let allBookings = [];
+
     // This function runs as soon as the HTML page is loaded
     document.addEventListener("DOMContentLoaded", async function() {
         const token = localStorage.getItem("access_token");
         
         if (!token) {
-            window.location.href = "/login/";
+            window.location.href = "/users/login/";
             return;
         }
 
         // --- Load bookings ---
         loadBookings(token);
         
-        // --- NEW: Add listener for the summary button ---
+        // --- Add listener for the summary button ---
         document.getElementById("summarize-btn").addEventListener("click", getSummary);
+
+        // --- Add event listeners for filter buttons ---
+        document.querySelectorAll("#booking-filter-group button").forEach(button => {
+            button.addEventListener("click", function() {
+                // Update active button
+                document.querySelector("#booking-filter-group .btn-primary").classList.replace("btn-primary", "btn-outline-primary");
+                this.classList.replace("btn-outline-primary", "btn-primary");
+                
+                // Get the filter and re-render the list
+                const filter = this.dataset.filter;
+                renderBookings(filter);
+            });
+        });
     });
 
-    async function loadBookings(token) {
+    // --- Renders bookings based on a filter ---
+    function renderBookings(filter = 'all') {
         const listEl = document.getElementById("bookings-list");
+        const noBookingsEl = document.getElementById("no-bookings-message");
+        listEl.innerHTML = ""; // Clear list
+        
+        const today = new Date();
+        let bookingsToRender;
+
+        // Filter the global 'allBookings' array
+        if (filter === 'upcoming') {
+            bookingsToRender = allBookings.filter(b => new Date(b.event.date_time) > today);
+        } else if (filter === 'past') {
+            bookingsToRender = allBookings.filter(b => new Date(b.event.date_time) <= today);
+        } else {
+            bookingsToRender = allBookings;
+        }
+
+        // Show "No bookings" message if the filtered list is empty
+        if (bookingsToRender.length === 0) {
+            noBookingsEl.textContent = "No " + (filter === 'all' ? '' : filter) + " bookings found.";
+            noBookingsEl.style.display = "block";
+        } else {
+            noBookingsEl.style.display = "none";
+        }
+
+        // 4. Build and display the booking cards
+        bookingsToRender.forEach(booking => {
+            const event = booking.event;
+            const eventTime = new Date(event.date_time).toLocaleString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            const cardHtml = `
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">${event.title}</h5>
+                            <p class="card-text text-muted">${event.location}</p>
+                            <p class="card-text"><strong>Seats Booked:</strong> ${booking.number_of_seats}</p>
+                            <p class="card-text"><strong>Date:</strong> ${eventTime}</p>
+                            <button class="btn btn-sm btn-outline-danger" onclick="cancelBooking(${booking.id})">
+                                Cancel Booking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            listEl.innerHTML += cardHtml;
+        });
+        listEl.style.display = "flex";
+    }
+
+    // --- Fetches booking data from the API ---
+    async function loadBookings(token) {
         const loadingEl = document.getElementById("loading-spinner");
         const errorEl = document.getElementById("error-message");
         const noBookingsEl = document.getElementById("no-bookings-message");
@@ -64,41 +147,19 @@
                 method: "GET",
                 headers: { "Authorization": "Bearer " + token }
             });
-            const bookings = await response.json();
+            
+            allBookings = await response.json(); // Store in global variable
 
             if (!response.ok) {
-                errorEl.textContent = bookings.detail || "Could not fetch bookings.";
+                errorEl.textContent = allBookings.detail || "Could not fetch bookings.";
                 errorEl.style.display = "block";
-            } else if (bookings.length === 0) {
+            } else if (allBookings.length === 0) {
+                noBookingsEl.textContent = "You have no bookings. Why not book one?";
                 noBookingsEl.style.display = "block";
-                // NEW: Disable summary button if no bookings
                 document.getElementById("summarize-btn").disabled = true;
             } else {
-                listEl.innerHTML = ""; // Clear
-                bookings.forEach(booking => {
-                    // ... (your existing cardHtml code to build cards) ...
-                    const event = booking.event;
-                    const eventTime = new Date(event.date_time).toLocaleString('en-US', {
-                        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    });
-                    const cardHtml = `
-                        <div class="col-md-6 mb-4">
-                            <div class="card shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title">${event.title}</h5>
-                                    <p class="card-text text-muted">${event.location}</p>
-                                    <p class="card-text"><strong>Seats Booked:</strong> ${booking.number_of_seats}</p>
-                                    <p class="card-text"><strong>Date:</strong> ${eventTime}</p>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="cancelBooking(${booking.id})">
-                                        Cancel Booking
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    listEl.innerHTML += cardHtml;
-                });
-                listEl.style.display = "flex";
+                // Render the list for the first time (show 'all')
+                renderBookings('all'); 
             }
         } catch (error) {
             errorEl.textContent = "Could not connect to the server.";
@@ -108,7 +169,7 @@
         }
     }
 
-    // --- NEW: Function to get AI summary ---
+    // --- Function to get AI summary ---
     async function getSummary() {
         const token = localStorage.getItem("access_token");
         const modalBody = document.getElementById("summary-modal-body");
@@ -143,22 +204,24 @@
         }
     }
 
-    // --- Your existing cancelBooking function ---
+    // --- Function to cancel a booking ---
     async function cancelBooking(bookingId) {
-        // ... (your existing cancelBooking code) ...
         const token = localStorage.getItem("access_token");
         if (!confirm("Are you sure you want to cancel this booking?")) {
             return;
         }
+
         try {
             const response = await fetch(`/api/bookings/${bookingId}`, {
                 method: "DELETE",
                 headers: { "Authorization": "Bearer " + token }
             });
+            
             const data = await response.json();
+
             if (response.ok) {
                 alert("Booking cancelled successfully!");
-                window.location.reload(); 
+                window.location.reload(); // Reload the page
             } else {
                 alert("Failed to cancel booking: " + data.message);
             }
