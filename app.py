@@ -97,6 +97,13 @@ def get_admin_login_page(request: Request):
 
     return templates.TemplateResponse("admin/admin_dashboard.html",{"request":request})
 
+@app.get("/admin/events/new/", include_in_schema=False)
+def get_create_event_page(request: Request):
+    """
+    Serves the page for creating a new event.
+    """
+    return templates.TemplateResponse("admin/create_event.html", {"request": request})   
+
 # --- Run the server ---
 if __name__ == "__main__":
     # For local development: python app.py

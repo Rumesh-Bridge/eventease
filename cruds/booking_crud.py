@@ -49,7 +49,10 @@ def get_user_bookings(db: Session, user_id: int):
 
 def get_all_booking(db: Session, skip: int = 0, limit: int = 100):
     """ Gets all booking in the system. (Admin only) """
-    return db.query(models.Booking).offset(skip).limit(limit).all()
+    return db.query(models.Booking).options(
+        joinedload(models.Booking.event),  # You already have this
+        joinedload(models.Booking.user)   # <-- ADD THIS LINE
+    ).offset(skip).limit(limit).all()
 
 # --- Get booking by ID ----
 def get_booking(db: Session, booking_id:int):

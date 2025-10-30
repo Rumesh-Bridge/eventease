@@ -1,0 +1,166 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Create New Event{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h3 class="mb-0">Create New Event</h3>
+            </div>
+            <div class="card-body">
+                <form id="create-event-form">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Event Title</label>
+                        <input type="text" class="form-control" id="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date_time" class="form-label">Date & Time</label>
+                            <input type="datetime-local" class="form-control" id="date_time" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="total_seats" class="form-label">Total Seats</label>
+                            <input type="number" class="form-control" id="total_seats" min="1" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ai-prompt" class="form-label">AI Description Prompt (Optional)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="ai-prompt" placeholder="e.g., 'A fun workshop on Python for beginners'">
+                            <button class="btn btn-outline-primary" type="button" id="generate-desc-button">Generate</button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" rows="5" required></textarea>
+                    </div>
+
+                    <div id="form-message" class="alert" style="display: none;"></div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary btn-lg">Create Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const token = getAuthToken();
+        if (!token) {
+            window.location.href = "/admin/login/";
+            return;
+        }
+
+        // Add listeners
+        document.getElementById("create-event-form").addEventListener("submit", handleCreateEvent);
+        document.getElementById("generate-desc-button").addEventListener("click", handleGenerateDescription);
+    });
+
+    // --- AI Description Generator ---
+    async function handleGenerateDescription() {
+        const token = getAuthToken();
+        const prompt = document.getElementById("ai-prompt").value;
+        const descTextarea = document.getElementById("description");
+        const genButton = document.getElementById("generate-desc-button");
+        const messageEl = document.getElementById("form-message");
+
+        if (!prompt) {
+            messageEl.textContent = "Please enter a prompt first.";
+            messageEl.className = "alert alert-danger";
+            messageEl.style.display = "block";
+            return;
+        }
+
+        genButton.disabled = true;
+        genButton.textContent = "Generating...";
+        messageEl.style.display = "none";
+
+        try {
+            const response = await fetch("/api/events/generate_description/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ prompt: prompt })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                handleAuthError(response);
+                throw new Error(data.detail || "AI generation failed");
+            }
+            descTextarea.value = data.description; // Success
+            
+        } catch (error) {
+            messageEl.textContent = error.message;
+            messageEl.className = "alert alert-danger";
+            messageEl.style.display = "block";
+        } finally {
+            genButton.disabled = false;
+            genButton.textContent = "Generate";
+        }
+    }
+
+    // --- Create Event Form Submission ---
+    async function handleCreateEvent(event) {
+        event.preventDefault();
+        const token = getAuthToken();
+        const messageEl = document.getElementById("form-message");
+
+        const eventData = {
+            title: document.getElementById("title").value,
+            location: document.getElementById("location").value,
+            date_time: document.getElementById("date_time").value,
+            total_seats: parseInt(document.getElementById("total_seats").value),
+            description: document.getElementById("description").value,
+        };
+
+        try {
+            const response = await fetch("/api/events/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify(eventData)
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                handleAuthError(response);
+                throw new Error(data.detail || "Failed to create event");
+            }
+
+            // Success!
+            messageEl.textContent = "Event created successfully! Redirecting to dashboard...";
+            messageEl.className = "alert alert-success";
+            messageEl.style.display = "block";
+
+            // Redirect back to dashboard after 2 seconds
+            setTimeout(() => {
+                window.location.href = "/admin/dashboard/";
+            }, 2000);
+            
+        } catch (error) {
+            messageEl.textContent = error.message;
+            messageEl.className = "alert alert-danger";
+            messageEl.style.display = "block";
+        }
+    }
+</script>
+{% endblock %}
