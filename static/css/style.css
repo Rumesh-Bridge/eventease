@@ -1,0 +1,51 @@
+/* Use a modern font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    /* This makes the background of all non-minimal pages a very light gray */
+    background-color: #f8f9fa; 
+}
+
+/* --- Navigation Bar --- */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+/* --- Home Page Hero --- */
+.hero-section {
+    background-image: url('https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+    background-size: cover;
+    background-position: center;
+    border-radius: 0.5rem;
+    padding: 5rem 0;
+    margin-bottom: 2rem;
+    color: white;
+}
+
+.hero-overlay {
+    background-color: rgba(0, 0, 0, 0.55);
+    border-radius: 0.5rem;
+    padding: 2.5rem;
+    display: inline-block; /* Keeps the overlay tight to the content */
+}
+
+/* --- Card Styles --- */
+.event-card {
+    border: none; /* Remove default border */
+    transition: all 0.3s ease; /* Add a smooth transition */
+    height: 100%; /* Make all cards the same height */
+}
+
+.event-card:hover {
+    transform: translateY(-5px); /* Lift card on hover */
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1); /* Add a more pronounced shadow */
+}
+
+/* --- Login/Register Forms --- */
+.auth-card {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 0.75rem;
+}
