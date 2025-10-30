@@ -49,3 +49,56 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     border-radius: 0.75rem;
 }
+
+/* === CHAT WIDGET STYLES === */
+
+.chat-bubble {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: var(--bs-primary); /* Use Bootstrap's primary color */
+    color: white;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1050;
+    transition: all 0.2s ease-in-out;
+}
+
+.chat-bubble:hover {
+    transform: scale(1.1);
+    background-color: var(--bs-primary-dark);
+}
+
+.chat-window-body {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
+
+.chat-message {
+    padding: 10px 15px;
+    border-radius: 18px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.ai-message {
+    background-color: #e9ecef; /* Light gray for AI */
+    color: #212529;
+    align-self: flex-start;
+}
+
+.user-message {
+    background-color: #0d6efd; /* Bootstrap blue for user */
+    color: white;
+    align-self: flex-end;
+}
